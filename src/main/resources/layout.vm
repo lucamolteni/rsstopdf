@@ -1,0 +1,37 @@
+\documentclass[10pt,final,hyphenatedtitles]{papertex}
+
+\usepackage[utf8]{inputenc}
+
+\makeatletter
+\def\UTFviii@defined#1{%
+\ifx#1\relax
+?%
+\else\expandafter
+#1%
+\fi
+}
+
+\makeatother
+
+\usepackage{ulem}
+
+\minraggedcols=3
+
+\begin{document}
+#foreach($news in $newsItems)
+    \begin{news}{3}
+    {${news.title}}
+    {}
+    {}
+    {1}
+		#if($news.imageFilePath)
+			\image{${news.imageFilePath}}
+		#end
+
+        \authorandplace{$news.source}{}
+        ${news.content}
+    \end{news}
+
+    \newssep
+#end
+\end{document}
