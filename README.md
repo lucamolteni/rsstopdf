@@ -48,8 +48,10 @@ The project uses the following dependencies:
 
 ## Building the Project
 
-To build the project, run the following command:
+To run the project, run the following command:
 
 ```sh
-mvn clean install
+mvn clean package exec:java
 ```
+
+Files will be created inside the `~/.rsstopdf` folder 
