@@ -49,7 +49,7 @@ public class FileDump {
         List<RssParser.ArticleImage> articleImages = article.articleImages();
 
 		articleImages.forEach(ai -> {
-            Path imagePath = rssToPdfPath(PHASE_03_PDF, "img", ai.fileName());
+            Path imagePath = rssToPdfPath(PHASE_03_PDF, "img", sanitiziedArticle, ai.fileName());
             writeByteArray(ai.content(), imagePath);
         });
 

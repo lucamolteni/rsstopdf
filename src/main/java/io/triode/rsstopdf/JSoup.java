@@ -21,7 +21,7 @@ public class JSoup {
         this.node = node;
     }
 
-    public String textWithImages() {
+    public String textWithImages(String articleName) {
         final StringBuilder accum = new StringBuilder();
         NodeTraversor.traverse(new NodeVisitor() {
             public void head(Node node, int depth) {
@@ -32,13 +32,17 @@ public class JSoup {
                     Element element = (Element) node;
                     if (element.tagName().equals("img")) {
 
-                        String imageOriginalSource = findImageFileNameFromUrl(element.attr("src"));
-                        if(imageOriginalSource.isEmpty()) {
-                            throw new RuntimeException("Empty image source: " + element);
-                        }
-                        String withImgPrefix = "img/" + imageOriginalSource;
+                        String imageOriginalSource = element.attr("src");
+                        Logger.info("Image original source: {}", imageOriginalSource);
 
-                        Logger.info("Image source: {}", withImgPrefix);
+                        String imageFileName = findImageFileNameFromUrl(imageOriginalSource);
+
+                        if(imageFileName.isEmpty()) {
+                            Logger.info("Empty image source: " + element);
+                            return;
+                        }
+                        String withImgPrefix = "img/%s/%s".formatted(articleName, imageFileName);
+
 
                         String alt = element.attr("alt");
                         String imgPlaceholder = generateQuotedLatextTag(withImgPrefix, alt);
