@@ -10,7 +10,7 @@ public class Latex {
 
 	public void executePdflatex(String texFilePath, File currentDirectory) {
 		// Command to execute pdflatex with the file as an argument
-		List<String> command = List.of( "pdflatex", texFilePath, "-interaction=nonstopmode" );
+		List<String> command = List.of( "pdflatex", texFilePath );
 
 		ProcessBuilder processBuilder = new ProcessBuilder( command );
 

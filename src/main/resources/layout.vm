@@ -1,3 +1,5 @@
+\nonstopmode
+\batchmode
 \documentclass[10pt,final,hyphenatedtitles]{papertex}
 
 \usepackage[utf8]{inputenc}
