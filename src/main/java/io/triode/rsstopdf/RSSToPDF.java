@@ -53,7 +53,8 @@ public final class RSSToPDF {
 		Configuration configuration = new Configuration();
 		FileDump fileDump = new FileDump(
 				configuration.rssToPdfFolderEnsureCreation(runTimeStamp),
-				configuration.todayDataDir(runTimeStamp)
+				configuration.rssToPdfFolderOutputPDF(),
+				configuration.todayTimestampString(runTimeStamp)
 		);
 		Opml opml = configuration.parseOpmlFromTemporaryFolder();
 
@@ -72,8 +73,9 @@ public final class RSSToPDF {
 		timer.record( () -> fetchRss( opml ) );
 		info( "Elapsed time:  {} ms", timer.totalTime( TimeUnit.MILLISECONDS ) );
 
-		Path texFilePath = fileDump.dumpFinalPDF( layout );
+		Path texFilePath = fileDump.dumpFinalTexFile( layout );
 		latex.executePdflatex( texFilePath.toString(), texFilePath.getParent().toFile() );
+		fileDump.movePdfFile();
 	}
 
 	private void fetchRss(Opml opml) {

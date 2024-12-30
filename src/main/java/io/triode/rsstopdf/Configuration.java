@@ -1,5 +1,6 @@
 package io.triode.rsstopdf;
 
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import javax.xml.bind.JAXBContext;
@@ -16,16 +17,25 @@ import java.time.format.DateTimeFormatter;
 public class Configuration {
     public static final String HOME_DIR = System.getProperty("user.home");
     private static final String RSS_TO_PDF_FOLDER = ".rsstopdf";
+    private static final String PDF_OUTPUT_FOLDER = "pdfs";
 
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm");
 
-    public String todayDataDir(Instant runTimestamp) {
+    public String todayTimestampString(Instant runTimestamp) {
         return dateTimeFormatter.format(runTimestamp.atZone(ZoneId.systemDefault()));
     }
 
     public String rssToPdfFolderEnsureCreation(Instant runTimestamp) {
-        Path configDir = Paths.get(HOME_DIR, RSS_TO_PDF_FOLDER, todayDataDir(runTimestamp));
+        Path configDir = Paths.get(HOME_DIR, RSS_TO_PDF_FOLDER, todayTimestampString(runTimestamp));
+        return ensureDirectoryCreated(configDir);
+    }
 
+    public String rssToPdfFolderOutputPDF() {
+        Path configDir = Paths.get(HOME_DIR, RSS_TO_PDF_FOLDER, PDF_OUTPUT_FOLDER);
+        return ensureDirectoryCreated(configDir);
+    }
+
+    private static String ensureDirectoryCreated(Path configDir) {
         try {
             if (Files.notExists(configDir)) {
                 Files.createDirectory(configDir);

@@ -6,26 +6,25 @@ import org.tinylog.Logger;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.util.Arrays;
 import java.util.List;
 
 
 public class FileDump {
 
-	private final String dumpDirectory;
+	private final String todayDirectory;
 	private final String filename;
+	private final String outputFolder;
 
 	private static final String PHASE_01_FETCH = "01-fetch";
 	private static final String PHASE_02_CREATE_ARTICLES = "02-create-articles";
 	private static final String PHASE_03_PDF = "03-finalPDF";
 
-	public FileDump(String dumpDirectory, String filename) {
-		Logger.info("Using tmp dir: {} ", dumpDirectory);
-		this.dumpDirectory = dumpDirectory;
+    public FileDump(String todayDirectory, String outputFolder, String filename) {
+        Logger.info("Using tmp dir: {} ", todayDirectory);
+		this.outputFolder = outputFolder;
+		this.todayDirectory = todayDirectory;
 		this.filename = filename;
 	}
 
@@ -58,7 +57,7 @@ public class FileDump {
 
 	}
 
-	public Path dumpFinalPDF(Layout layout) {
+	public Path dumpFinalTexFile(Layout layout) {
 		Path path = rssToPdfPath(PHASE_03_PDF, filename + ".tex");
 
 		try (Writer fileWriter = new FileWriter(path.toFile())) {
@@ -81,6 +80,19 @@ public class FileDump {
 		}
 	}
 
+	public String movePdfFile() {
+		try {
+			Path pdfPath = rssToPdfPath(PHASE_03_PDF, filename + ".pdf");
+			Path finalPath = Path.of(outputFolder, filename + ".pdf");
+			Files.move(pdfPath , finalPath);
+
+			Logger.info("Moving generated file to: {}", finalPath);
+			return finalPath.toString();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public String writeByteArray(byte[] content, Path path) {
 		try {
 			Logger.info("Dumping fetched content to file: {}", path);
@@ -95,7 +107,7 @@ public class FileDump {
 		String[] fixedPart = {phase};
 		String[] fullPath = Arrays.copyOf(fixedPart, fixedPart.length + more.length);
 		System.arraycopy(more, 0, fullPath, fixedPart.length, more.length);
-		Path path = Paths.get(dumpDirectory, fullPath);
+		Path path = Paths.get(todayDirectory, fullPath);
 		try {
 			Files.createDirectories(path.getParent());
 		} catch (IOException e) {
