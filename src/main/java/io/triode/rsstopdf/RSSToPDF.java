@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -107,26 +106,19 @@ public final class RSSToPDF {
 		}
 
 		RssParser.ParseSuccess parsedRssArticles = (RssParser.ParseSuccess) optionalParseResult;
-		List<RssParser.Article> fullArticles =
-				parsedRssArticles.articles()
-						.stream()
-						.map( rssContent::refetchContentIfTooSmall )
-						.map( rssContent::cleanContent )
-						.toList();
 
-		RssParser.ParseSuccess rssWithFullArticles = new RssParser.ParseSuccess(
-				parsedRssArticles.outline(),
-				parsedRssArticles.feed(),
-				fullArticles
-		);
-
-		// Do this only if dump is enabled
-		for ( RssParser.Article article : rssWithFullArticles.articles() ) {
-			fileDump.dumpArticles( rssWithFullArticles, article );
+        for (RssParser.Article article : parsedRssArticles.articles()) {
+			fetchSpecificSite(article, parsedRssArticles.feed().getTitle());
 		}
 
-		for ( RssParser.Article article : fullArticles ) {
-			layout.addArticle( article.title(), article.body(), article.outline().htmlUrl );
-		}
+	}
+
+	private void fetchSpecificSite(RssParser.Article article, String websiteTitle) {
+
+		RssParser.Article refetchContentIfTooSmall = rssContent.refetchContentIfTooSmall(article);
+		RssParser.Article cleanContent = rssContent.cleanContent(refetchContentIfTooSmall);
+
+		fileDump.dumpArticle(cleanContent, websiteTitle);
+		layout.addArticle( cleanContent.title(), cleanContent.body(), cleanContent.outline().htmlUrl );
 	}
 }

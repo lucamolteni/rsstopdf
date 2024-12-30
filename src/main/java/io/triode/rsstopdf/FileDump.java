@@ -40,9 +40,9 @@ public class FileDump {
 		return writeFile(fetchBody, path);
 	}
 
-	public String dumpArticles(RssParser.ParseSuccess rssWithFullArticles, RssParser.Article article) {
+	public String dumpArticle(RssParser.Article article, String websiteTitle) {
 		// TODO probably it's insicure to depend on a file name provided by outside, I'm not sure this is enough
-		String sanitiziedTitle = FilenameUtils.getName(rssWithFullArticles.feed().getTitle());
+		String sanitiziedTitle = FilenameUtils.getName(websiteTitle);
 		String sanitiziedArticle = FilenameUtils.getName(article.title());
 		Path articlePath = rssToPdfPath(PHASE_02_CREATE_ARTICLES, sanitiziedTitle, sanitiziedArticle + ".xml");
 
