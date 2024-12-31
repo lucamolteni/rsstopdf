@@ -109,8 +109,10 @@ public final class RSSToPDF {
 
 		RssParser.ParseSuccess parsedRssArticles = (RssParser.ParseSuccess) optionalParseResult;
 
-        for (RssParser.Article article : parsedRssArticles.articles()) {
-			fetchSpecificSite(article, parsedRssArticles.feed().getTitle());
+		try (ExecutorService executorArticle = Executors.newVirtualThreadPerTaskExecutor()) {
+			for (RssParser.Article article : parsedRssArticles.articles()) {
+				executorArticle.submit(() -> fetchSpecificSite(article, parsedRssArticles.feed().getTitle()));
+			}
 		}
 
 	}
@@ -121,9 +123,14 @@ public final class RSSToPDF {
 		RssParser.Article cleanContent = rssContent.cleanContent(refetchContentIfTooSmall);
 
 		fileDump.dumpArticle(cleanContent, websiteTitle);
-		for(RssParser.ArticleImage articleImage : cleanContent.articleImages()) {
-			RssParser.ArticleImage imageWithByteContent = rssContent.addImageToArticle(articleImage, articleImage.fileName());
-			fileDump.dumpImage(cleanContent.title(), imageWithByteContent);
+		try (ExecutorService executorImages = Executors.newVirtualThreadPerTaskExecutor()) {
+			for(RssParser.ArticleImage articleImage : cleanContent.articleImages()) {
+				executorImages.submit(() -> {
+					RssParser.ArticleImage imageWithByteContent = rssContent.addImageToArticle(articleImage, articleImage.fileName());
+					fileDump.dumpImage(cleanContent.title(), imageWithByteContent);
+				});
+
+			}
 		}
 
 		layout.addArticle( cleanContent.title(), cleanContent.body(), cleanContent.outline().htmlUrl );
