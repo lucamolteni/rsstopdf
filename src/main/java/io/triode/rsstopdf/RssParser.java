@@ -73,6 +73,11 @@ public class RssParser {
 	}
 
 	public record ArticleImage(byte[] content, String fileName) {
+		public static final byte[] EMPTY_BYTE = new byte[0];
+
+		public ArticleImage(String fileName) {
+			this(EMPTY_BYTE, fileName);
+		}
 	}
 
 

@@ -50,7 +50,7 @@ public class RSSContent {
 
         for (Element img : images) {
             String src = img.attr("src");
-            addImageToArticle(a, src);
+            a.articleImages().add(new RssParser.ArticleImage(src));
         }
 
         String textWithImages = new JSoup(contentHtml).textWithImages(FilenameUtils.getName(a.title()));
@@ -58,15 +58,16 @@ public class RSSContent {
         return new RssParser.Article(a.outline(), a.changeBody(textWithImages), a.articleImages());
     }
 
-    private RssParser.Article addImageToArticle(RssParser.Article article, String url) {
+    public RssParser.ArticleImage addImageToArticle(RssParser.ArticleImage article, String url) {
         Optional<HttpResponse<byte[]>> imageByte = httpFetch.getURLFollowingRedirectsByte(url);
         String fileName = findImageFileNameFromUrl(url);
 
         return imageByte
-                .map(httpResponse -> article.addImage(new RssParser.ArticleImage(
+                .map(httpResponse ->
+                        new RssParser.ArticleImage(
                         httpResponse.body(),
                         fileName
-                ))).orElse(article);
+                )).orElse(article);
     }
 
     public static String findImageFileNameFromUrl(String url) {

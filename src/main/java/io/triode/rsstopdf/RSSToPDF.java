@@ -122,7 +122,8 @@ public final class RSSToPDF {
 
 		fileDump.dumpArticle(cleanContent, websiteTitle);
 		for(RssParser.ArticleImage articleImage : cleanContent.articleImages()) {
-			fileDump.dumpImage(cleanContent.title(), articleImage);
+			RssParser.ArticleImage imageWithByteContent = rssContent.addImageToArticle(articleImage, articleImage.fileName());
+			fileDump.dumpImage(cleanContent.title(), imageWithByteContent);
 		}
 
 		layout.addArticle( cleanContent.title(), cleanContent.body(), cleanContent.outline().htmlUrl );
