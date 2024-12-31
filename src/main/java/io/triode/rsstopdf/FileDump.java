@@ -45,16 +45,13 @@ public class FileDump {
 		String sanitiziedArticle = FilenameUtils.getName(article.title());
 		Path articlePath = rssToPdfPath(PHASE_02_CREATE_ARTICLES, sanitiziedTitle, sanitiziedArticle + ".xml");
 
-        List<RssParser.ArticleImage> articleImages = article.articleImages();
-
-		articleImages.forEach(ai -> {
-            Path imagePath = rssToPdfPath(PHASE_03_PDF, "img", sanitiziedArticle, ai.fileName());
-            writeByteArray(ai.content(), imagePath);
-        });
-
 		String fetchBody = article.body();
 		return writeFile(fetchBody, articlePath);
+	}
 
+	public void dumpImage(String article, RssParser.ArticleImage ai) {
+		Path imagePath = rssToPdfPath(PHASE_03_PDF, "img", article, ai.fileName());
+		writeByteArray(ai.content(), imagePath);
 	}
 
 	public Path dumpFinalTexFile(Layout layout) {

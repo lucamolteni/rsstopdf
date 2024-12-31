@@ -121,6 +121,10 @@ public final class RSSToPDF {
 		RssParser.Article cleanContent = rssContent.cleanContent(refetchContentIfTooSmall);
 
 		fileDump.dumpArticle(cleanContent, websiteTitle);
+		for(RssParser.ArticleImage articleImage : cleanContent.articleImages()) {
+			fileDump.dumpImage(cleanContent.title(), articleImage);
+		}
+
 		layout.addArticle( cleanContent.title(), cleanContent.body(), cleanContent.outline().htmlUrl );
 	}
 }
