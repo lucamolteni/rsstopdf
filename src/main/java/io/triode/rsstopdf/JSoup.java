@@ -16,42 +16,30 @@ import static io.triode.rsstopdf.RSSContent.findImageFileNameFromUrl;
 public class JSoup {
 
     Node node;
+    private String LATEX_NEW_PARAGRAPH = "\n\n";
 
     public JSoup(Node node) {
         this.node = node;
     }
 
     public String textWithImages(String articleName) {
-        final StringBuilder accum = new StringBuilder();
+        final StringBuilder output = new StringBuilder();
         NodeTraversor.traverse(new NodeVisitor() {
+            @Override
             public void head(Node node, int depth) {
-                if (node instanceof TextNode) {
-                    TextNode textNode = (TextNode) node;
-                    appendNormalisedText(accum, textNode);
-                } else if (node instanceof Element) {
-                    Element element = (Element) node;
-                    if (element.tagName().equals("img")) {
-
-                        String imageOriginalSource = element.attr("src");
-                        Logger.info("Image original source: {}", imageOriginalSource);
-
-                        String imageFileName = findImageFileNameFromUrl(imageOriginalSource);
-
-                        if(imageFileName.isEmpty()) {
-                            Logger.info("Empty image source: " + element);
-                            return;
-                        }
-                        String withImgPrefix = "img/%s/%s".formatted(articleName, imageFileName);
-
-
-                        String alt = element.attr("alt");
-                        String imgPlaceholder = generateQuotedLatextTag(withImgPrefix, alt);
-
-                        accum.append(imgPlaceholder).append(' ');
-                    } else if (accum.length() > 0 &&
-                            (element.isBlock() || element.tagName().equals("br")) &&
-                            !lastCharIsWhitespace(accum)) {
-                        accum.append(' ');
+                if (node instanceof TextNode textNode) {
+                    appendNormalisedText(output, textNode);
+                } else if (node instanceof Element element) {
+                    if ("img".equals(element.tagName())) {
+                        transformImage(element, articleName, output);
+                    } else if ("br".equals(element.tagName())) {
+                        output.append(LATEX_NEW_PARAGRAPH);
+                    } else if ("p".equals(element.tagName())) {
+                        output.append(LATEX_NEW_PARAGRAPH);
+                    } else if (output.length() > 0 &&
+                            (element.isBlock() || "br".equals(element.tagName())) &&
+                            !lastCharIsWhitespace(output)) {
+                        output.append(' ');
                     }
                 }
             }
@@ -60,7 +48,25 @@ public class JSoup {
                 // Do nothing for tail
             }
         }, node);
-        return accum.toString().trim();
+        return output.toString().trim();
+    }
+
+    private void transformImage(Element element, String articleName, StringBuilder accum) {
+        String imageOriginalSource = element.attr("src");
+        Logger.info("Image original source: {}", imageOriginalSource);
+
+        String imageFileName = findImageFileNameFromUrl(imageOriginalSource);
+
+        if(imageFileName.isEmpty()) {
+            Logger.info("Empty image source: " + element);
+            return;
+        }
+        String withImgPrefix = "img/%s/%s".formatted(articleName, imageFileName);
+
+        String alt = element.attr("alt");
+        String imgPlaceholder = generateQuotedLatextTag(withImgPrefix, alt);
+
+        accum.append(imgPlaceholder).append(' ');
     }
 
     private static final String BACKSLASH = "@@BACKSLASH@@";
