@@ -28,11 +28,23 @@ public class JSoup {
             @Override
             public void head(Node node, int depth) {
                 if (node instanceof TextNode textNode) {
+                    // Avoid printing text inside an anchor tag as it's handled inside the elemnt branch
+                    if(textNode.parentNode() instanceof Element parentElement) {
+                        if("a".equals(parentElement.tagName())) {
+                            return;
+                        }
+                    }
                     appendNormalisedText(output, textNode);
                 } else if (node instanceof Element element) {
                     if ("img".equals(element.tagName())) {
                         transformImage(element, articleName, output);
-                    } else if ("br".equals(element.tagName())) {
+                    } else if ("a".equals(element.tagName())) {
+                        String href = element.attr("href");
+                        String text = element.text();
+                        String linkText = text.startsWith("http") ? "link" : text;
+                        String linkPlaceholder = generateQuotedImgLatextTag("href", href, linkText);
+                        output.append(linkPlaceholder);
+                    }  else if ("br".equals(element.tagName())) {
                         output.append(LATEX_NEW_PARAGRAPH);
                     } else if ("p".equals(element.tagName())) {
                         output.append(LATEX_NEW_PARAGRAPH);
@@ -64,7 +76,7 @@ public class JSoup {
         String withImgPrefix = "img/%s/%s".formatted(articleName, imageFileName);
 
         String alt = element.attr("alt");
-        String imgPlaceholder = generateQuotedLatextTag(withImgPrefix, alt);
+        String imgPlaceholder = generateQuotedImgLatextTag("image", withImgPrefix, alt);
 
         accum.append(imgPlaceholder).append(' ');
     }
@@ -74,10 +86,11 @@ public class JSoup {
     private static final String CLOSE_BRACKET = "@@CLOSEBRACKET@@";
 
     // \image{img/ireland.jpg}
-    public static String generateQuotedLatextTag(String src, String alt) {
-        return "%simage%s%s%s%s%s%s"
+    public static String generateQuotedImgLatextTag(String tagName, String src, String alt) {
+        return "%s%s%s%s%s%s%s%s"
                 .formatted(
                         BACKSLASH,
+                        tagName,
                         OPEN_BRACKET,
                         src,
                         CLOSE_BRACKET,
@@ -110,8 +123,7 @@ public class JSoup {
 
 
     static boolean preserveWhitespace(Node node) {
-        if (node != null && node instanceof Element) {
-            Element el = (Element) node;
+        if (node instanceof Element el) {
             int i = 0;
 
             do {
