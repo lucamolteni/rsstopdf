@@ -9,6 +9,7 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -56,7 +57,15 @@ public final class RSSToPDF {
 				configuration.rssToPdfFolderOutputPDF(),
 				configuration.todayTimestampString(runTimeStamp)
 		);
-		Opml opml = configuration.parseOpmlFromTemporaryFolder();
+
+		Path opmlPath;
+		if(args.length > 0) {
+            opmlPath = Paths.get(args[0]);
+        } else {
+			opmlPath = Paths.get(Configuration.HOME_DIR, Configuration.RSS_TO_PDF_FOLDER, "opml.xml");
+		}
+
+		Opml opml = configuration.parseOpmlFromPath(opmlPath);
 
 		RssTraversal rssTraversal = new RssTraversal();
 		HttpFetch httpFetch = new HttpFetch();

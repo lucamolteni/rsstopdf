@@ -1,6 +1,5 @@
 package io.triode.rsstopdf;
 
-import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import javax.xml.bind.JAXBContext;
@@ -16,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 
 public class Configuration {
     public static final String HOME_DIR = System.getProperty("user.home");
-    private static final String RSS_TO_PDF_FOLDER = ".rsstopdf";
+    public static final String RSS_TO_PDF_FOLDER = ".rsstopdf";
     private static final String PDF_OUTPUT_FOLDER = "pdfs";
 
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm");
@@ -48,15 +47,14 @@ public class Configuration {
         return configDir.toString();
     }
 
-    public Opml parseOpmlFromTemporaryFolder() throws JAXBException {
-        Path basePath = Paths.get(HOME_DIR, RSS_TO_PDF_FOLDER, "opml.xml");
-        if (!basePath.toFile().exists()) {
-            throw new IllegalStateException("opml.xml not found in " + basePath);
+    public Opml parseOpmlFromPath(Path path) throws JAXBException {
+        if (!path.toFile().exists()) {
+            throw new IllegalStateException("opml.xml not found in " + path);
         }
 
         JAXBContext context = JAXBContext.newInstance(Opml.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
-        return (Opml) unmarshaller.unmarshal(basePath.toFile());
+        return (Opml) unmarshaller.unmarshal(path.toFile());
     }
 
 }
