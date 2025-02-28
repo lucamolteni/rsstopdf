@@ -52,11 +52,6 @@ public final class RSSToPDF {
 		Instant runTimeStamp = Instant.now();
 
 		Configuration configuration = new Configuration();
-		FileDump fileDump = new FileDump(
-				configuration.rssToPdfFolderEnsureCreation(runTimeStamp),
-				configuration.rssToPdfFolderOutputPDF(),
-				configuration.todayTimestampString(runTimeStamp)
-		);
 
 		Path opmlPath;
 		if(args.length > 0) {
@@ -64,6 +59,19 @@ public final class RSSToPDF {
         } else {
 			opmlPath = Paths.get(Configuration.HOME_DIR, Configuration.RSS_TO_PDF_FOLDER, "opml.xml");
 		}
+
+		String outputFolder;
+		if(args.length > 1) {
+			outputFolder = args[1];
+		} else {
+			outputFolder = configuration.rssToPdfFolderOutputPDF();
+		}
+
+		FileDump fileDump = new FileDump(
+				configuration.rssToPdfFolderEnsureCreation(runTimeStamp),
+				outputFolder,
+				configuration.todayTimestampString(runTimeStamp)
+		);
 
 		Opml opml = configuration.parseOpmlFromPath(opmlPath);
 

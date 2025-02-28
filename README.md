@@ -2,6 +2,8 @@
 
 A Java program to generate a magazine-like PDF to read news in a offline fashion from a ebook reader or a tablet.
 
+[Here's](example.pdf) an example of the generated output. 
+
 It uses the [papertex](https://ctan.org/pkg/papertex) package
 You can read more in [this PDF](https://ctan.math.washington.edu/tex-archive/macros/latex/contrib/papertex/papertex.pdf)
 
@@ -51,7 +53,9 @@ The project uses the following dependencies:
 To run the project, run the following command:
 
 ```sh
-mvn clean package exec:java
+./start.sh <PATH_TO_OPML_FILE>
 ```
+
+If you don't provide an opml file path, `.rsstopdf/opml.xml` will be used as a deafult. 
 
 Files will be created inside the `~/.rsstopdf` folder 
