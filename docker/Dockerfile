@@ -16,6 +16,6 @@ WORKDIR /app
 RUN git clone https://github.com/lucamolteni/rsstopdf.git . && \
     mvn package
 
-RUN chmod +x run.sh
+RUN chmod a+x run.sh
 
 CMD ["run.sh"]

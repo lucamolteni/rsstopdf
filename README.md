@@ -50,12 +50,23 @@ The project uses the following dependencies:
 
 ## Building the Project
 
-To run the project, run the following command:
+To try the project using a docker image run the following command:
 
 ```sh
-./start.sh <PATH_TO_OPML_FILE>
+./run-docker.sh <PATH_TO_OPML_FILE> <PATH_TO_OUTPUT>
 ```
 
-If you don't provide an opml file path, `.rsstopdf/opml.xml` will be used as a deafult. 
+examle
 
-Files will be created inside the `~/.rsstopdf` folder 
+```sh
+./run-docker.sh "~/rssfeeds.opml" "."
+```
+
+Alternatively to run the project without docker but using maven on the local machine, run the following command:
+
+```sh
+./run.sh <PATH_TO_OPML_FILE> <PATH_TO_OUTPUT_DIRECTORY>
+```
+
+If you don't provide an opml file path, `~/.rsstopdf/opml.xml` will be used as a deafult. 
+If you don't specify the output folder, `~/.rsstopdf/pdfs` will be used instead

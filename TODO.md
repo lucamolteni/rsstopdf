@@ -9,6 +9,6 @@
 
 # TODO
 
+* Discover why not every image is fetched
 * Create docker image to try it without having installed java and latex
-* Upload an example to the website
 * Fix the bug with unshowed images
