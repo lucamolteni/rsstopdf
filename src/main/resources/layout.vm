@@ -1,5 +1,6 @@
 \nonstopmode
 \batchmode
+\PassOptionsToPackage{papersize={203mm,270.7mm},left=20mm,top=20mm}{geometry}
 \documentclass[12pt,final,hyphenatedtitles]{papertex}
 
 \usepackage[utf8]{inputenc}
