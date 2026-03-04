@@ -2,7 +2,7 @@ package io.triode.rsstopdf;
 
 import net.dankito.readability4j.Article;
 import net.dankito.readability4j.Readability4J;
-import org.apache.commons.io.FilenameUtils;
+
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -50,10 +50,12 @@ public class RSSContent {
 
         for (Element img : images) {
             String src = img.attr("src");
-            a.articleImages().add(new RssParser.ArticleImage(src));
+            if (!src.isEmpty()) {
+                a.articleImages().add(new RssParser.ArticleImage(src));
+            }
         }
 
-        String textWithImages = new JSoup(contentHtml).textWithImages(FilenameUtils.getName(a.title()));
+        String textWithImages = new JSoup(contentHtml).textWithImages(FileDump.sanitizeFileName(a.title()));
 
         return new RssParser.Article(a.outline(), a.changeBody(textWithImages), a.articleImages());
     }

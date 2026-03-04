@@ -1,6 +1,5 @@
 package io.triode.rsstopdf;
 
-import org.apache.commons.io.FilenameUtils;
 import org.tinylog.Logger;
 
 import java.io.FileWriter;
@@ -33,7 +32,7 @@ public class FileDump {
 			String fetchBody) {
 
 		// TODO probably it's insicure to depend on a file name provided by outside, I'm not sure this is enough
-		String sanitiziedTitle = FilenameUtils.getName(feedTitle);
+		String sanitiziedTitle = sanitizeFileName(feedTitle);
 		Path path = rssToPdfPath(PHASE_01_FETCH, sanitiziedTitle + ".xml");
 
 		return writeFile(fetchBody, path);
@@ -41,8 +40,8 @@ public class FileDump {
 
 	public String dumpArticle(RssParser.Article article, String websiteTitle) {
 		// TODO probably it's insicure to depend on a file name provided by outside, I'm not sure this is enough
-		String sanitiziedTitle = FilenameUtils.getName(websiteTitle);
-		String sanitiziedArticle = FilenameUtils.getName(article.title());
+		String sanitiziedTitle = sanitizeFileName(websiteTitle);
+		String sanitiziedArticle = sanitizeFileName(article.title());
 		Path articlePath = rssToPdfPath(PHASE_02_CREATE_ARTICLES, sanitiziedTitle, sanitiziedArticle + ".xml");
 
 		String fetchBody = article.body();
@@ -50,7 +49,9 @@ public class FileDump {
 	}
 
 	public void dumpImage(String article, RssParser.ArticleImage ai) {
-		Path imagePath = rssToPdfPath(PHASE_03_PDF, "img", article, ai.fileName());
+		String sanitizedArticle = sanitizeFileName(article);
+		String sanitizedImageName = sanitizeFileName(ai.fileName());
+		Path imagePath = rssToPdfPath(PHASE_03_PDF, "img", sanitizedArticle, sanitizedImageName);
 		writeByteArray(ai.content(), imagePath);
 	}
 
@@ -124,6 +125,10 @@ public class FileDump {
 		Path errorLog = Path.of(todayDirectory, "error-latex.log");
 		writeFile(output, errorLog);
 		Logger.warn("pdflatex output saved to: {}", errorLog);
+	}
+
+	static String sanitizeFileName(String name) {
+		return name.replaceAll("[:/\\\\*?\"<>|%]", "_");
 	}
 
 	private Path rssToPdfPath(String phase, String... more) {

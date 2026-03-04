@@ -67,7 +67,7 @@ public class JSoup {
         String imageOriginalSource = element.attr("src");
         Logger.info("Image original source: {}", imageOriginalSource);
 
-        String imageFileName = findImageFileNameFromUrl(imageOriginalSource);
+        String imageFileName = FileDump.sanitizeFileName(findImageFileNameFromUrl(imageOriginalSource));
 
         if(imageFileName.isEmpty()) {
             Logger.info("Empty image source: " + element);
