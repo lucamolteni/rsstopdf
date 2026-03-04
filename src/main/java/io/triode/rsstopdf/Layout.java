@@ -7,12 +7,13 @@ import org.apache.velocity.context.Context;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Layout {
 
     private final Template template;
     private final VelocityContext velocityContext;
-    private final List<Map<String, String>> newsItems = new ArrayList<>();
+    private final List<Map<String, String>> newsItems = new CopyOnWriteArrayList<>();
 
     public Layout() {
         VelocityEngine velocityEngine = new VelocityEngine();

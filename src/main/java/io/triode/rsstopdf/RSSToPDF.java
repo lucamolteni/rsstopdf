@@ -12,8 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.TimeUnit;
 
 import static org.tinylog.Logger.info;
@@ -96,10 +95,12 @@ public final class RSSToPDF {
 	}
 
 	private void fetchRss(Opml opml) {
-		try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-
+		try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAll())) {
 			rssTraversal.extractRssFeeds( opml )
-					.forEach( outline -> executor.submit( () -> fetchRSS( outline ) ) );
+					.forEach( outline -> scope.fork( () -> fetchRSS( outline ) ) );
+			scope.join();
+		} catch (InterruptedException e) {
+			Logger.error("Feed fetching interrupted", e);
 		}
 	}
 
@@ -126,10 +127,13 @@ public final class RSSToPDF {
 
 		RssParser.ParseSuccess parsedRssArticles = (RssParser.ParseSuccess) optionalParseResult;
 
-		try (ExecutorService executorArticle = Executors.newVirtualThreadPerTaskExecutor()) {
+		try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAll())) {
 			for (RssParser.Article article : parsedRssArticles.articles()) {
-				executorArticle.submit(() -> fetchSpecificSite(article, parsedRssArticles.feed().getTitle()));
+				scope.fork(() -> fetchSpecificSite(article, parsedRssArticles.feed().getTitle()));
 			}
+			scope.join();
+		} catch (InterruptedException e) {
+			Logger.error("Article fetching interrupted for feed: {}", outline.title, e);
 		}
 
 	}
@@ -140,13 +144,16 @@ public final class RSSToPDF {
 		RssParser.Article cleanContent = rssContent.cleanContent(refetchContentIfTooSmall);
 
 		fileDump.dumpArticle(cleanContent, websiteTitle);
-		try (ExecutorService executorImages = Executors.newVirtualThreadPerTaskExecutor()) {
+		try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAll())) {
 			for(RssParser.ArticleImage articleImage : cleanContent.articleImages()) {
-				executorImages.submit(() -> {
+				scope.fork(() -> {
 					RssParser.ArticleImage imageWithByteContent = rssContent.addImageToArticle(articleImage, articleImage.fileName());
 					fileDump.dumpImage(cleanContent.title(), imageWithByteContent);
 				});
 			}
+			scope.join();
+		} catch (InterruptedException e) {
+			Logger.error("Image fetching interrupted for article: {}", cleanContent.title(), e);
 		} finally {
 			layout.addArticle(cleanContent.title(), cleanContent.body(), cleanContent.outline().htmlUrl);
 		}
