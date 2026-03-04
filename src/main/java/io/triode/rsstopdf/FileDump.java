@@ -77,7 +77,15 @@ public class FileDump {
 		}
 	}
 
+	public boolean pdfExists() {
+		return Files.exists(Paths.get(todayDirectory, PHASE_03_PDF, filename + ".pdf"));
+	}
+
 	public String movePdfFile() {
+		if (!pdfExists()) {
+			Logger.error("PDF was not generated");
+			return null;
+		}
 		try {
 			Path pdfPath = rssToPdfPath(PHASE_03_PDF, filename + ".pdf");
 			Path finalPath = Path.of(outputFolder, filename + ".pdf");
@@ -98,6 +106,24 @@ public class FileDump {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public void dumpErrorLog(List<String> errors) {
+		if (errors.isEmpty()) {
+			return;
+		}
+		Path errorLog = Path.of(todayDirectory, "errors.log");
+		writeFile(String.join("\n", errors), errorLog);
+		Logger.warn("Errors occurred during processing. See: {}", errorLog);
+	}
+
+	public void dumpLatexErrorLog(String output) {
+		if (output.isBlank()) {
+			return;
+		}
+		Path errorLog = Path.of(todayDirectory, "error-latex.log");
+		writeFile(output, errorLog);
+		Logger.warn("pdflatex output saved to: {}", errorLog);
 	}
 
 	private Path rssToPdfPath(String phase, String... more) {

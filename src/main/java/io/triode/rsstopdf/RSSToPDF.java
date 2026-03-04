@@ -7,12 +7,18 @@ import org.tinylog.Logger;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.StructuredTaskScope;
+import java.util.concurrent.StructuredTaskScope.Subtask;
 import java.util.concurrent.TimeUnit;
 
 import static org.tinylog.Logger.info;
@@ -27,6 +33,7 @@ public final class RSSToPDF {
 	private final Layout layout;
 	private final Latex latex;
 
+	private final List<String> errors = new CopyOnWriteArrayList<>();
 	private final MeterRegistry registry = new SimpleMeterRegistry();
 	private final Timer timer;
 
@@ -90,15 +97,19 @@ public final class RSSToPDF {
 		info( "Elapsed time:  {} ms", timer.totalTime( TimeUnit.MILLISECONDS ) );
 
 		Path texFilePath = fileDump.dumpFinalTexFile( layout );
-		latex.executePdflatex( texFilePath.toString(), texFilePath.getParent().toFile() );
+		String latexOutput = latex.executePdflatex( texFilePath.toString(), texFilePath.getParent().toFile() );
+		fileDump.dumpLatexErrorLog(latexOutput);
+		fileDump.dumpErrorLog(errors);
 		fileDump.movePdfFile();
 	}
 
 	private void fetchRss(Opml opml) {
 		try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAll())) {
+			List<Subtask<?>> subtasks = new ArrayList<>();
 			rssTraversal.extractRssFeeds( opml )
-					.forEach( outline -> scope.fork( () -> fetchRSS( outline ) ) );
+					.forEach( outline -> subtasks.add( scope.fork( () -> fetchRSS( outline ) ) ) );
 			scope.join();
+			logFailedSubtasks(subtasks, "feed");
 		} catch (InterruptedException e) {
 			Logger.error("Feed fetching interrupted", e);
 		}
@@ -128,10 +139,12 @@ public final class RSSToPDF {
 		RssParser.ParseSuccess parsedRssArticles = (RssParser.ParseSuccess) optionalParseResult;
 
 		try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAll())) {
+			List<Subtask<?>> subtasks = new ArrayList<>();
 			for (RssParser.Article article : parsedRssArticles.articles()) {
-				scope.fork(() -> fetchSpecificSite(article, parsedRssArticles.feed().getTitle()));
+				subtasks.add(scope.fork(() -> fetchSpecificSite(article, parsedRssArticles.feed().getTitle())));
 			}
 			scope.join();
+			logFailedSubtasks(subtasks, "article");
 		} catch (InterruptedException e) {
 			Logger.error("Article fetching interrupted for feed: {}", outline.title, e);
 		}
@@ -145,17 +158,31 @@ public final class RSSToPDF {
 
 		fileDump.dumpArticle(cleanContent, websiteTitle);
 		try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.awaitAll())) {
+			List<Subtask<?>> subtasks = new ArrayList<>();
 			for(RssParser.ArticleImage articleImage : cleanContent.articleImages()) {
-				scope.fork(() -> {
+				subtasks.add(scope.fork(() -> {
 					RssParser.ArticleImage imageWithByteContent = rssContent.addImageToArticle(articleImage, articleImage.fileName());
 					fileDump.dumpImage(cleanContent.title(), imageWithByteContent);
-				});
+				}));
 			}
 			scope.join();
+			logFailedSubtasks(subtasks, "image");
 		} catch (InterruptedException e) {
 			Logger.error("Image fetching interrupted for article: {}", cleanContent.title(), e);
 		} finally {
 			layout.addArticle(cleanContent.title(), cleanContent.body(), cleanContent.outline().htmlUrl);
+		}
+	}
+
+	private void logFailedSubtasks(List<Subtask<?>> subtasks, String taskType) {
+		for (Subtask<?> subtask : subtasks) {
+			if (subtask.state() == Subtask.State.FAILED) {
+				Throwable ex = subtask.exception();
+				Logger.error("Failed {} task: {}", taskType, ex.getMessage(), ex);
+				StringWriter sw = new StringWriter();
+				ex.printStackTrace(new PrintWriter(sw));
+				errors.add("[" + taskType + "] " + sw);
+			}
 		}
 	}
 }

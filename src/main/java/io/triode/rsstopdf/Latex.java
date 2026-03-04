@@ -8,32 +8,34 @@ import org.tinylog.Logger;
 
 public class Latex {
 
-	public void executePdflatex(String texFilePath, File currentDirectory) {
+	public String executePdflatex(String texFilePath, File currentDirectory) {
 		// Command to execute pdflatex with the file as an argument
 		List<String> command = List.of( "pdflatex", texFilePath );
 
 		ProcessBuilder processBuilder = new ProcessBuilder( command );
 
-		// Redirect the process's input/output to the console
-		processBuilder.inheritIO();
+		processBuilder.redirectErrorStream( true );
 		processBuilder.directory( currentDirectory );
 
 		try {
 			// Start the process
 			Process process = processBuilder.start();
+			String output = new String(process.getInputStream().readAllBytes());
 
 			// Wait for the process to complete
 			int exitCode = process.waitFor();
 
-			if ( exitCode == 0 ) {
-				Logger.info( "pdflatex executed successfully." );
+			if ( exitCode != 0 ) {
+				Logger.warn( "pdflatex exited with code: {}", exitCode );
 			}
 			else {
-				Logger.error( "pdflatex execution failed with exit code: " + exitCode );
+				Logger.info( "pdflatex executed successfully." );
 			}
+			return output;
 		}
 		catch (IOException | InterruptedException e) {
 			Logger.error( e );
+			return e.getMessage();
 		}
 	}
 
