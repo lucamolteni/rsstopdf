@@ -94,7 +94,9 @@ public class Layout {
      * @return the String with escaped chars
      */
     public static String escapeAllChars(String input) {
-        String quotedLatexFile = input
+        // Strip control characters (except tab, newline, carriage return) that break pdflatex
+        String sanitized = input.replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]", "");
+        String quotedLatexFile = sanitized
                 .replace("\\", "\\textbackslash ")
                 .replace("#", "\\#")
                 .replace("$", "\\$")

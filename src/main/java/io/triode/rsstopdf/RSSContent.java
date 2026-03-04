@@ -29,11 +29,20 @@ public class RSSContent {
             Optional<HttpResponse<String>> stringHttpResponse = httpFetch.getURLFollowingRedirects(link);
 
             articleBody = stringHttpResponse
+                    .filter(RSSContent::isHtmlResponse)
                     .map(HttpResponse::body)
                     .orElse(articleBody);
         }
 
         return new RssParser.Article(article.outline(), article.changeBody(articleBody));
+    }
+
+    private static boolean isHtmlResponse(HttpResponse<String> response) {
+        String contentType = response.headers()
+                .firstValue("Content-Type")
+                .orElse("");
+        return contentType.contains("text/html") || contentType.contains("text/xml")
+                || contentType.contains("application/xhtml");
     }
 
     public RssParser.Article cleanContent(RssParser.Article a) {
