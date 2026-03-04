@@ -92,7 +92,13 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <mainClass>io.triode.rsstopdf.RSSToPDF</mainClass>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>--enable-preview</argument>
+                        <argument>-classpath</argument>
+                        <classpath/>
+                        <argument>io.triode.rsstopdf.RSSToPDF</argument>
+                    </arguments>
                 </configuration>
             </plugin>
             <plugin>
