@@ -55,6 +55,10 @@ public class RSSContent {
 
         Element contentHtml = article.getArticleContent();
 
+        if (contentHtml == null) {
+            return a;
+        }
+
         Elements images = contentHtml.getElementsByTag("img");
 
         for (Element img : images) {
@@ -82,10 +86,13 @@ public class RSSContent {
     }
 
     public static String findImageFileNameFromUrl(String url) {
-        String path = "";
         try {
             URI uri = new URI(url);
-            path = uri.getPath();
+            String path = uri.getPath();
+
+            if (path == null || path.isEmpty()) {
+                return "";
+            }
 
             Path nioPath = Paths.get(path);
             return nioPath.getFileName().toString();
